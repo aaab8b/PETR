@@ -6,15 +6,24 @@
 <!-- ## Introduction -->
 
 This repository is an official implementation of [PETR](https://arxiv.org/abs/2203.05625) and [PETRv2](https://arxiv.org/abs/2206.01256). The flash attention version can be find from the "[flash](https://github.com/megvii-research/PETR/tree/flash)" branch.
+
 ###Rocm verison of PETRv2:
+
 0. Download all the needed preprocessed data of Nuscenes for PETRv2 like the original instruction since PETRv2 does not provide any preprocess scripts but preprocessed data.
+
 1.Use the docker we provided by Rocm.
+
 2. pip3 install av2==0.1.0
+
 3. link mmdetection3d to the directory of the PETR.
+
 4. ln -s the nuscenses dataset and preprocessed data to /data/Dataset/nuScenes for usage or modify the config and the pkl loading path for usage.
+
 5. Modify the code of nuscens-devkit(in our docker location:/opt/conda/envs/py_3.10/lib/python3.10/site-packages/nuscenes/eval/detection/data_classes.py):
 "self.class_names = self.class_range.keys()" to "self.class_names = list(self.class_range.keys())" (line 39), which may cause a evaluation problem.
+
 6. To use original fp32 training, sh run_train_fp32.sh.
+
 7. To use bf16 training we modified, sh run_train_bf16.sh.
 <div align="center">
   <img src="figs/overview.png"/>
