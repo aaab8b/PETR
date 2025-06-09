@@ -27,7 +27,7 @@ model = dict(
     type='Petr3D',
     use_grid_mask=True,
     img_backbone=dict(
-        type='VoVNetCP', ###use checkpoint to save memory
+        type='VoVNet',
         spec_name='V-99-eSE',
         norm_eval=True,
         frozen_stages=-1,
@@ -73,7 +73,7 @@ model = dict(
                         ],
                     feedforward_channels=2048,
                     ffn_dropout=0.1,
-                    with_cp=True,  ###use checkpoint to save memory
+                    with_cp=False,  ###use checkpoint to save memory
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')),
             )),

@@ -32,6 +32,28 @@ from mmdet.apis import set_random_seed
 from mmseg import __version__ as mmseg_version
 from mmdet.utils import get_device
 
+from torch.amp import autocast
+import torch.nn as nn
+# v2
+def convert_conv_linear_to_bf16(module: nn.Module,exclude_module:list):
+    for name, submodule in module.named_children():
+        if name in exclude_module:
+            print("{} is excluded from converting to bf16.".format(name))
+            continue
+        if isinstance(submodule, (nn.Conv2d, nn.Linear)):
+            if hasattr(submodule, '_original_forward'):
+                continue
+            submodule._original_forward = submodule.forward
+            def new_forward(m):
+                def forward_hooked(x):
+                    with autocast('cuda', dtype=torch.bfloat16):
+                        return m._original_forward(x).to(torch.float32)
+                return forward_hooked
+            submodule.forward = new_forward(submodule)
+        else:
+            convert_conv_linear_to_bf16(submodule,exclude_module)
+    return module
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
@@ -216,7 +238,11 @@ def main():
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
     model.init_weights()
-    model = model.to(memory_format=torch.channels_last)
+    model=model.to(memory_format=torch.channels_last)
+    exclude_module=cfg.get("exclude_bf16",None)
+    print("exclude bf16 module:{}".format(exclude_module))
+    convert_conv_linear_to_bf16(model,exclude_module)
+
     logger.info(f'Model:\n{model}')
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:

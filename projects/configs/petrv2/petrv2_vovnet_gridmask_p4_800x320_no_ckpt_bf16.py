@@ -27,7 +27,7 @@ model = dict(
     type='Petr3D',
     use_grid_mask=True,
     img_backbone=dict(
-        type='VoVNetCP', ###use checkpoint to save memory
+        type='VoVNet',
         spec_name='V-99-eSE',
         norm_eval=True,
         frozen_stages=-1,
@@ -73,7 +73,7 @@ model = dict(
                         ],
                     feedforward_channels=2048,
                     ffn_dropout=0.1,
-                    with_cp=True,  ###use checkpoint to save memory
+                    with_cp=False,  ###use checkpoint to save memory
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')),
             )),
@@ -246,6 +246,9 @@ checkpoint_config = dict(interval=1, max_keep_ckpts=3)
 runner = dict(type='EpochBasedRunner', max_epochs=total_epochs)
 load_from='ckpts/fcos3d_vovnet_imgbackbone-remapped.pth'
 resume_from=None
+
+exclude_bf16=["pts_bbox_head"]
+
 
 # mAP: 0.4104
 # mATE: 0.7226

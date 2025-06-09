@@ -370,9 +370,15 @@ class PETRv2Head(AnchorFreeHead):
         img2lidars = np.asarray(img2lidars)
         img2lidars = coords.new_tensor(img2lidars) # (B, N, 4, 4)
 
+        # coords = coords.view(1, 1, W, H, D, 4, 1).repeat(B, N, 1, 1, 1, 1, 1)
+        # img2lidars = img2lidars.view(B, N, 1, 1, 1, 4, 4).repeat(1, 1, W, H, D, 1, 1)
+        # coords3d = torch.matmul(img2lidars, coords).squeeze(-1)[..., :3]
         coords = coords.view(1, 1, W, H, D, 4, 1).repeat(B, N, 1, 1, 1, 1, 1)
-        img2lidars = img2lidars.view(B, N, 1, 1, 1, 4, 4).repeat(1, 1, W, H, D, 1, 1)
-        coords3d = torch.matmul(img2lidars, coords).squeeze(-1)[..., :3]
+        img2lidars = img2lidars.view(B, N, 1, 1, 1, 4, 4)
+        a,b,c,d,e,f,g = coords.shape
+        coords3d = img2lidars.reshape(-1,4,4).matmul(coords.view(a*b,c*d*e,f).permute(0,2,1))
+        coords3d = coords3d.permute(0,2,1).view(a,b,c,d,e,f,g).squeeze(-1)[..., :3]
+
         coords3d[..., 0:1] = (coords3d[..., 0:1] - self.position_range[0]) / (self.position_range[3] - self.position_range[0])
         coords3d[..., 1:2] = (coords3d[..., 1:2] - self.position_range[1]) / (self.position_range[4] - self.position_range[1])
         coords3d[..., 2:3] = (coords3d[..., 2:3] - self.position_range[2]) / (self.position_range[5] - self.position_range[2])
